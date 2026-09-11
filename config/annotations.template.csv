@@ -1,0 +1,4 @@
+video_name,behavior,start_s,end_s,annotator,notes
+cohortA_res01_int07,Attack,34.2,37.9,NR,example row - delete me
+cohortA_res01_int07,Social_investigation,5.0,9.4,NR,
+cohortA_res02_int03,NONE,,,NR,video fully scored - no events

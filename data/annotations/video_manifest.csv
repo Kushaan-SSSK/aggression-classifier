@@ -1,0 +1,7 @@
+video_name,source_path,intruder_entry_s,crop_x,crop_y,crop_w,crop_h,downsample,cage_width_mm,cohort,lighting,notes
+10-3-25_ELS580,videos\Training Videos\Training Videos\Preprocessed Videos\10.3.25.ELS580.mp4,5.0,1427,171,387,749,,195,10.3.25,,crop/entry from SimBA batch_process_log.json; source 1920x1080 @ 60 fps
+10-3-25_ELS589,videos\Training Videos\Training Videos\Preprocessed Videos\10.3.25.ELS589.mp4,7.0,1427,198,384,721,,195,10.3.25,,crop/entry from SimBA batch_process_log.json; source 1920x1080 @ 60 fps
+8-1-26_ELS693,videos\Training Videos\Training Videos\Preprocessed Videos\8.1.26.ELS693.mp4,13.0,1383,252,464,704,,195,8.1.26,,crop/entry from SimBA batch_process_log.json; source 1920x1080 @ 60 fps
+8-1-26_ELS719,videos\Training Videos\Training Videos\Preprocessed Videos\8.1.26.ELS719.mp4,4.0,1313,260,500,704,,195,8.1.26,,crop/entry from SimBA batch_process_log.json; source 1920x1080 @ 60 fps
+8-3-26_ELS663,videos\Training Videos\Training Videos\Preprocessed Videos\8.3.26.ELS663.mp4,7.0,1311,315,434,676,,195,8.3.26,,crop/entry from SimBA batch_process_log.json; source 1920x1080 @ 60 fps
+9-10-25_ELS558,videos\Training Videos\Training Videos\Preprocessed Videos\9.10.25.ELS558.mp4,6.0,1383,231,249,461,,195,9.10.25,,crop/entry from SimBA batch_process_log.json; source 1920x720 @ 30 fps

@@ -1,0 +1,2 @@
+video_name,source_path,intruder_entry_s,crop_x,crop_y,crop_w,crop_h,downsample,cage_width_mm,cohort,lighting,notes
+cohortA_res01_int07,data/raw_videos/cohortA_res01_int07.mp4,12.5,120,40,560,900,,290,A,bright,example row - delete me

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "behavior_pipeline"
+version = "0.1.0"
+description = "Resident-intruder mouse behaviour scoring: preprocessing, pose conversion, SimBA supervised + unsupervised stages"
+requires-python = ">=3.10"
+dependencies = ["pyyaml", "numpy", "pandas", "scipy", "requests"]
+
+[tool.setuptools.packages.find]
+include = ["behavior_pipeline*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-x -q -p no:dash"

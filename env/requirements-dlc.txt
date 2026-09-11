@@ -1,0 +1,4 @@
+# Environment 2: DeepLabCut 3 (PyTorch) for SuperAnimal / maDLC inference (Python 3.10)
+# Install torch FIRST (see setup_env.ps1) so the correct CPU/CUDA wheel is used.
+deeplabcut[modelzoo]
+pyyaml

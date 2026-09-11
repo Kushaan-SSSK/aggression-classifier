@@ -1,0 +1,6 @@
+video_name,behavior,start_s,end_s,annotator,notes
+10-3-25_ELS580,TODO,,,,"clip is 0-32 s; 0 = intruder entry (raw video 5 s); seconds = frame counter / 15; behaviours: Attack, Social_investigation, or NONE if none occur"
+10-3-25_ELS589,TODO,,,,"clip is 0-300 s; 0 = intruder entry (raw video 7 s); seconds = frame counter / 15; behaviours: Attack, Social_investigation, or NONE if none occur"
+8-1-26_ELS693,TODO,,,,"clip is 0-121 s; 0 = intruder entry (raw video 13 s); seconds = frame counter / 15; behaviours: Attack, Social_investigation, or NONE if none occur"
+8-1-26_ELS719,TODO,,,,"clip is 0-300 s; 0 = intruder entry (raw video 4 s); seconds = frame counter / 15; behaviours: Attack, Social_investigation, or NONE if none occur"
+8-3-26_ELS663,TODO,,,,"clip is 0-300 s; 0 = intruder entry (raw video 7 s); seconds = frame counter / 15; behaviours: Attack, Social_investigation, or NONE if none occur"

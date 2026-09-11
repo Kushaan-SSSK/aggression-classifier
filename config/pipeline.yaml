@@ -1,0 +1,241 @@
+# ---------------------------------------------------------------------------
+# Behaviour-scoring pipeline configuration
+# All paths are relative to the project root (the folder that contains config/)
+# unless they are absolute.  Edit values here; do not hard-code them in code.
+# ---------------------------------------------------------------------------
+
+project:
+  simba_project_dir: simba_project        # SimBA project tree is created here
+  simba_project_name: resident_intruder
+  classifiers: [Attack, Social_investigation]
+  workflow_file_type: csv                 # csv | parquet
+
+paths:
+  raw_videos: data/raw_videos
+  processed_videos: data/processed_videos
+  pose_raw: data/pose/raw                 # pose-estimator output (h5 / csv / slp)
+  pose_simba: data/pose/simba_16bp        # converted 16-body-part DLC-style CSVs
+  annotations: data/annotations/annotations.csv
+  video_manifest: data/annotations/video_manifest.csv
+  pretrained_models: models/pretrained
+  resident_clips: data/resident_clips   # short clips around intruder entry (resident stage input)
+  pose_resident: data/pose/resident     # resident stage decisions (<video>.resident.json)
+  pose_bench: data/pose/bench           # pose --bench outputs
+
+# ---- Stage 1: video preprocessing (from the docx) --------------------------
+video:
+  fps: 15                                 # "Lower FPS to 15"
+  clip_length_s: 300                      # "Trim to 5 minutes after the intruder is placed"
+  grayscale: true                         # "Apply grayscale" (false keeps colour; the pose head prefers grey)
+  resident_clip:                          # extra clip [entry - pre_roll, entry + pre_roll] for the resident stage
+    enabled: true
+    pre_roll_s: 3
+  clahe:
+    enabled: true                         # "Apply CLAHE"
+    clip_limit: 2.0
+    tile_grid: [16, 16]
+  frame_counter:
+    enabled: true                         # "Add frame count"
+    position: top_left                    # top_left | top_right | bottom_left | bottom_right
+    font_scale: 0.7
+  downsample:                             # "Downsample (skip if quality is poor)"
+    enabled: false
+    max_width: 640                        # only applied when enabled; keeps aspect ratio
+  output_codec: libx264
+  output_crf: 18                          # lower = better quality, larger file
+  ffmpeg_binary: ffmpeg                   # override with an absolute path if not on PATH
+
+# ---- Stage 2: pose estimation -------------------------------------------------
+pose:
+  backend: superanimal                    # superanimal | dlc_h5 | dlc_csv
+  mode: blob                              # blob = background-subtraction boxes + SuperAnimal pose head (CPU, ~0.1 s/frame)
+                                          # detector = SuperAnimal Faster R-CNN + pose head (needs colour video; ~1.4 s/frame on CPU)
+  animal_ids: [Animal_1, Animal_2]        # Animal_1 = resident, Animal_2 = intruder
+  superanimal:
+    superanimal_name: superanimal_topviewmouse
+    model_name: hrnet_w32
+    detector_name: fasterrcnn_resnet50_fpn_v2   # needed in blob mode too (top-down config)
+    max_individuals: 2
+    device: auto                          # auto | cpu | cuda
+    video_adapt: false                    # true only on a GPU machine / Colab (slow on CPU)
+    pcutoff: 0.1
+    bbox_threshold: 0.9                   # plotting only
+    box_score_thresh: null                # detector threshold (null = DLC default 0.6)
+    batch_size: 8
+    create_labeled_video: true
+  blob:                                   # pose.mode blob: background subtraction (tune with `pose --boxes-only`)
+    bg_samples: 60                        # frames sampled for the per-pixel background
+    bg_percentile: 90                     # bright percentile -> background without the (dark) mice
+    diff_threshold: 35                    # 0-255 darkness below background that counts as mouse
+    dark_threshold: 60                    # pixel must also be darker than this
+    blur: 7
+    open_k: 9                             # removes bedding speckle
+    close_k: 9                            # fills holes in a mouse body
+    min_area_frac: 0.004                  # smallest blob kept, fraction of frame area
+    min_area_rel: 0.15                    # ... and at least this x the typical mouse area once known
+    carry_frames: 15                      # a vanished mouse keeps its last box for up to 1 s (hidden / behind the other)
+    split_merged: true                    # a blob covering both previous boxes (huddle) is split into two halves
+    max_area_frac: 0.15                   # larger blobs (bedding shifts, hand) are dropped
+    min_fill: 0.3                         # blob pixels / bounding box; sprawling thin components are rejected
+    max_box_frac: 0.5                     # box wider/taller than this fraction of the frame is rejected
+    merge_area_factor: 1.3                # one blob > factor x typical mouse area -> split into 2 boxes (touching mice)
+    merge_len_factor: 1.8                 # ... or a blob longer than factor x sqrt(typical area) (mice in a line)
+    box_pad_frac: 0.20
+    bg_window_s: 60                       # background recomputed per 60 s window (bedding gets displaced)
+    ignore_counter: true                  # mask the frame-counter overlay before thresholding
+  resident:                               # resident stage thresholds
+    max_match_px: 60                      # the resident track must be within this of one animal's Center
+    min_confidence: 0.3                   # |d1-d2| / max(d1,d2) must exceed this
+    min_frames: 10
+    min_single_blob_frac: 0.5             # share of pre-entry frames showing exactly one animal
+    max_jump_px: 80                       # blob-track continuity across the entry moment
+  # Map from SimBA 16-body-part names (per animal, without the _1/_2 suffix)
+  # to the body-part names used by the pose estimator output.
+  keypoint_map:
+    superanimal:
+      Ear_left: left_ear
+      Ear_right: right_ear
+      Nose: nose
+      Center: mouse_center
+      Lat_left: left_midside
+      Lat_right: right_midside
+      Tail_base: tail_base
+      Tail_end: tail_end
+    # Fill this in if the lab-trained DeepLabCut model is used instead:
+    lab_dlc:
+      Ear_left: Ear_left
+      Ear_right: Ear_right
+      Nose: Nose
+      Center: Center
+      Lat_left: Lat_left
+      Lat_right: Lat_right
+      Tail_base: Tail_base
+      Tail_end: Tail_end
+  identity:
+    method: hungarian                     # frame-to-frame assignment on body centres
+    anchor_body_part: Center
+    max_jump_px: 150                      # larger jumps count as a possible identity swap
+    min_likelihood: 0.1                   # keypoints below this are treated as missing
+
+# ---- Stage 3: SimBA project ---------------------------------------------------
+simba:
+  body_part_config_idx: 6                 # "2 animals; 16 body-parts"
+  pose_estimation_bp_cnt: "16"
+  animal_cnt: 2
+  cage_width_mm: 195                      # cage width along the crop x-axis; unconfirmed, ask the lab
+  px_per_mm: null                         # if null, computed as crop_width_px / cage_width_mm
+  interpolation:                          # SimBA importer dict
+    type: body-parts                      # body-parts | animals
+    method: nearest                       # nearest | linear | quadratic
+  smoothing:                              # set to null to disable
+    method: savitzky-golay                # savitzky-golay | gaussian
+    time_window: 200                      # ms
+  outlier_correction:
+    enabled: false                        # off: on zero-shot poses the correctors froze whole tracks (see README)
+    aggregation: median                   # mean | median
+    movement_criterion: 0.7
+    location_criterion: 1.5
+    body_parts:
+      Animal_1: {Movement: [Nose_1, Tail_base_1], Location: [Nose_1, Tail_base_1]}
+      Animal_2: {Movement: [Nose_2, Tail_base_2], Location: [Nose_2, Tail_base_2]}
+
+# ---- Stage 4: annotations ------------------------------------------------------
+annotations:
+  behavior_aliases:                       # map names the annotator uses (case-insensitive) -> classifier names
+    attack: Attack
+    attacks: Attack
+    attack bout: Attack
+    aggression: Attack
+    aggression bout: Attack
+    aggressive: Attack
+    fight: Attack
+    fighting: Attack
+    biting: Attack
+    social_investigation: Social_investigation
+    social investigation: Social_investigation
+    investigation: Social_investigation
+    investigating: Social_investigation
+    sniff: Social_investigation
+    sniffing: Social_investigation
+    anogenital sniffing: Social_investigation
+    social: Social_investigation
+  time_reference: processed               # processed = seconds in the trimmed clip (0 = intruder entry);
+                                          # raw = seconds in the untrimmed recording (shifted by intruder_entry_s per video).
+                                          # A per-row `time_reference` column overrides this.
+  none_token: NONE                        # a row with behavior NONE marks a fully-scored video with no events
+  include_unannotated_videos: false       # true = treat videos absent from the CSV as all-absent
+
+# ---- Stage 5: model training --------------------------------------------------
+train:
+  algorithm: RF
+  rf_n_estimators: 2000
+  rf_max_features: sqrt
+  rf_criterion: gini
+  rf_min_sample_leaf: 1
+  train_test_size: 0.2
+  train_test_split_type: FRAMES           # FRAMES | BOUTS
+  under_sample_setting: random undersample   # None | random undersample
+  under_sample_ratio: 1.0
+  over_sample_setting: None               # None | SMOTE | SMOTEENN
+  over_sample_ratio: 1.0
+  class_weights: None                     # None | balanced | balanced_subsample
+  holdout_videos: []                      # video names moved out of training for validation
+  evaluation:
+    classification_report: true
+    feature_importance_log: true
+    feature_importance_bar_graph: true
+    n_feature_importance_bars: 20
+    permutation_importance: false
+    learning_curve: false
+    precision_recall_curve: true
+    example_decision_tree: false
+    shap: false
+    model_meta_data_file: true
+
+# ---- Stage 6: inference --------------------------------------------------------
+infer:
+  thresholds: {Attack: 0.5, Social_investigation: 0.5}
+  min_bout_ms: {Attack: 100, Social_investigation: 200}
+
+# ---- Proximity bouts ("times where each mouse are close in proximity") ---------
+proximity:
+  pairs:                                  # any of these below threshold = in proximity
+    - [Nose_1, Center_2]
+    - [Nose_2, Center_1]
+    - [Center_1, Center_2]
+  threshold_mm: 40
+  min_bout_ms: 200
+  inject_into_machine_results: true       # adds a Proximity 0/1 column so unsupervised can slice on it
+
+# ---- Aggression proxy (attack-like bouts from pose alone, until the classifier is trained) ---
+aggression_proxy:
+  contact_mm: 30                          # smallest body-part distance below this = contact
+  speed_mm_s: 150                         # ... and at least one animal's centre moving faster than this
+  smooth_ms: 200                          # speed smoothing window
+  min_bout_ms: 100
+  merge_gap_ms: 300                       # bridge short interruptions inside one bout
+  pairs:
+    - [Nose_1, Center_2]
+    - [Nose_2, Center_1]
+    - [Center_1, Center_2]
+    - [Nose_1, Tail_base_2]
+    - [Nose_2, Tail_base_1]
+  inject_into_machine_results: true       # adds Aggression_proxy 0/1 so unsupervised can slice on it
+
+# ---- Stage 7: unsupervised (SimBA UMAP + HDBSCAN) --------------------------------
+unsupervised:
+  data_slice: ALL FEATURES (EXCLUDING POSE)
+  clf_slice: ALL CLASSIFIERS              # or a single classifier / Proximity
+  bout_aggregation_type: MEDIAN
+  min_bout_length: 5                      # frames
+  umap:
+    n_neighbors: [15, 30]
+    min_distance: [0.1]
+    spread: [1.0]
+    scaler: MIN-MAX
+    variance: 0.25
+  hdbscan:
+    alpha: [1.0]
+    min_cluster_size: [15, 30]
+    min_samples: [1]
+    cluster_selection_epsilon: [0.0]

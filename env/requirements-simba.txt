@@ -1,0 +1,16 @@
+# Environment 1: SimBA + the behaviour pipeline (Python 3.10)
+simba-uw-tf-dev
+umap-learn
+hdbscan
+pyyaml
+scipy
+requests
+pytest
+# SimBA imports pkg_resources, removed from setuptools>=81
+setuptools<81
+# SimBA unsupervised DatasetCreator writes parquet; SimBA pins pyarrow 6 which pandas 2 rejects
+fastparquet
+
+# desktop app (python -m behavior_pipeline gui)
+PySide6>=6.6,<6.9
+pyqtgraph>=0.13.7

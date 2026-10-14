@@ -1,0 +1,19 @@
+# environments and caches
+.venv-*/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# the trained model is downloaded by env/get_model.py
+models/*
+!models/.gitkeep
+
+# anything the pipeline writes
+data/*
+!data/annotations/
+data/annotations/*
+!data/annotations/.gitkeep
+simba_project/
+results/
+aggression_analysis/

@@ -22,17 +22,21 @@ def main() -> int:
     zip_path = DEST / "Attack_model.zip"
     print(f"downloading the attack model (about 45 MB) from\n  {URL}")
 
+    shown = set()
+
     def progress(blocks, block_size, total):
         if total > 0:
-            done = min(blocks * block_size / total, 1.0)
-            print(f"\r  {done * 100:5.1f}%", end="", flush=True)
+            step = int(min(blocks * block_size / total, 1.0) * 10)
+            if step not in shown:
+                shown.add(step)
+                print(f"  {step * 10}%", flush=True)
 
     try:
         urllib.request.urlretrieve(URL, zip_path, progress)
     except Exception as exc:
-        print(f"\ndownload failed: {exc}\nCheck your internet connection and run: python env/get_model.py")
+        print(f"download failed: {exc}\nCheck your internet connection and run: python env/get_model.py")
         return 1
-    print("\n  unpacking")
+    print("  unpacking")
     with zipfile.ZipFile(zip_path) as z:
         z.extractall(DEST)
     zip_path.unlink()

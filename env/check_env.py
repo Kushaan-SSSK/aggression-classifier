@@ -54,7 +54,13 @@ def main() -> int:
         pass
     print("-- pipeline package --")
     print(_try("behavior_pipeline"))
-    print(f"\nSimBA role: {'ready' if simba_ok and ffmpeg else 'NOT ready'} | DLC role: {'ready' if dlc_ok else 'NOT ready'}")
+    # each environment only needs its own half: .venv-simba runs SimBA and the app, .venv-dlc runs DeepLabCut
+    if simba_ok:
+        print(f"\nSimBA environment: {'ready' if ffmpeg else 'NOT ready (ffmpeg missing)'}")
+    elif dlc_ok:
+        print("\nDeepLabCut environment: ready")
+    else:
+        print("\nNOT ready: neither SimBA nor DeepLabCut imports in this environment")
     return 0 if (simba_ok or dlc_ok) else 1
 
 

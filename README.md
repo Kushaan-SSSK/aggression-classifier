@@ -12,7 +12,8 @@ You don't need to know how to code. Everything happens in a normal app window.
 ## What you need
 
 - A computer running Windows 10 or 11, macOS, or Linux. No graphics card needed.
-- About 15 GB of free space and an internet connection for the install.
+- About 6 GB of free space and an internet connection for the install, plus about 250 MB for every 5-minute video
+  you score.
 - Your own videos. The app does not come with any. See [Your videos](#your-videos) below.
 
 ## Install (once)

@@ -35,9 +35,9 @@ if (-not $SkipDlc) {
     if (-not (Test-Path ".venv-dlc")) { & $py -3.10 -m venv .venv-dlc }
     & ".venv-dlc\Scripts\python.exe" -m pip install --upgrade pip wheel "setuptools<81"
     if ($Cuda -ne "") {
-        & ".venv-dlc\Scripts\python.exe" -m pip install torch torchvision --index-url "https://download.pytorch.org/whl/$Cuda"
+        & ".venv-dlc\Scripts\python.exe" -m pip install torch==2.14.0 torchvision==0.29.0 --index-url "https://download.pytorch.org/whl/$Cuda"
     } else {
-        & ".venv-dlc\Scripts\python.exe" -m pip install torch torchvision --index-url "https://download.pytorch.org/whl/cpu"
+        & ".venv-dlc\Scripts\python.exe" -m pip install torch==2.14.0 torchvision==0.29.0 --index-url "https://download.pytorch.org/whl/cpu"
     }
     & ".venv-dlc\Scripts\python.exe" -m pip install -r env\requirements-dlc.txt
     & ".venv-dlc\Scripts\python.exe" env\check_env.py

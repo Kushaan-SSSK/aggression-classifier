@@ -39,9 +39,9 @@ echo "== DeepLabCut environment"
 [ -d .venv-dlc ] || "$PY" -m venv .venv-dlc
 .venv-dlc/bin/python -m pip install --upgrade pip wheel "setuptools<81"
 if [ "$(uname)" = "Darwin" ]; then
-  .venv-dlc/bin/python -m pip install torch torchvision
+  .venv-dlc/bin/python -m pip install torch==2.14.0 torchvision==0.29.0
 else
-  .venv-dlc/bin/python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+  .venv-dlc/bin/python -m pip install torch==2.14.0 torchvision==0.29.0 --index-url https://download.pytorch.org/whl/cpu
 fi
 .venv-dlc/bin/python -m pip install -r env/requirements-dlc.txt
 
